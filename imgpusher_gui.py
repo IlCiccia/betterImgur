@@ -52,6 +52,7 @@ CONFIG_PATH = Path.home() / ".imgpusher_config.json"
 NEW_FOLDER_LABEL = "+ Nuova cartella..."
 ROOT_FOLDER_LABEL = "(cartella principale)"
 NEW_BRANCH_LABEL = "+ Nuovo branch..."
+ALL_FOLDERS_LABEL = "(tutte le cartelle)"
 
 # Cartelle tecniche mai mostrate/attraversate negli elenchi (oltre a quelle
 # nascoste, cioè che iniziano con '.').
@@ -170,6 +171,20 @@ def list_image_files(repo_dir: str, folder: str):
     return sorted(files)
 
 
+def list_all_image_files(repo_dir: str):
+    """Elenca ricorsivamente tutte le immagini della repo (cartelle tecniche escluse),
+    restituendo percorsi relativi (es. 'cyberpunk/foto.webp' o 'foto.png')."""
+    repo_path = Path(repo_dir)
+    results = []
+    for dirpath, dirnames, filenames in os.walk(repo_path):
+        dirnames[:] = [d for d in dirnames if not _is_excluded_dir(d)]
+        for name in filenames:
+            if Path(name).suffix.lower() in IMAGE_EXTENSIONS:
+                rel = (Path(dirpath) / name).relative_to(repo_path)
+                results.append(rel.as_posix())
+    return sorted(results)
+
+
 def push_current_branch(repo_dir: str):
     """Fa push, impostando l'upstream automaticamente se manca."""
     try:
@@ -228,6 +243,7 @@ class ImgPusherApp(BaseTk):
         self.config_data = load_config()
         self.result_queue = queue.Queue()
         self.pending_paths = []  # file selezionati/trascinati, non ancora caricati
+        self._link_display_items = []  # rel_path per ogni riga della listbox "Copia link"
 
         self._build_ui()
         self.after(100, self._poll_queue)
@@ -560,7 +576,18 @@ class ImgPusherApp(BaseTk):
         self.link_folder_combo.pack(side="left", padx=8)
         self.link_folder_combo.bind("<<ComboboxSelected>>", lambda _e: self._refresh_file_list())
 
-        ttk.Label(parent, text="Immagini in questa cartella:").pack(fill="x", pady=(6, 2))
+        search_frame = ttk.Frame(parent)
+        search_frame.pack(fill="x", pady=(8, 2))
+        ttk.Label(search_frame, text="Cerca:").pack(side="left")
+        self.search_var = tk.StringVar(value="")
+        self.search_var.trace_add("write", lambda *_args: self._refresh_file_list())
+        search_entry = ttk.Entry(search_frame, textvariable=self.search_var)
+        search_entry.pack(side="left", fill="x", expand=True, padx=8)
+        ttk.Button(
+            search_frame, text="✕", width=3, command=lambda: self.search_var.set("")
+        ).pack(side="left")
+
+        ttk.Label(parent, text="Immagini trovate:").pack(fill="x", pady=(6, 2))
 
         list_frame = ttk.Frame(parent)
         list_frame.pack(fill="both", expand=True)
@@ -580,23 +607,40 @@ class ImgPusherApp(BaseTk):
 
     def _refresh_file_list(self):
         self.file_listbox.delete(0, "end")
+        self._link_display_items = []
         repo_dir = self.config_data.get("repo_dir")
         if not repo_dir:
             return
+
         folder = self.link_folder_var.get()
-        folder = "" if folder == ROOT_FOLDER_LABEL else folder
-        for name in list_image_files(repo_dir, folder):
-            self.file_listbox.insert("end", name)
+        if folder == ALL_FOLDERS_LABEL:
+            rel_paths = list_all_image_files(repo_dir)
+            display_names = list(rel_paths)  # percorso completo: serve per distinguere le cartelle
+        else:
+            actual_folder = "" if folder == ROOT_FOLDER_LABEL else folder
+            filenames = list_image_files(repo_dir, actual_folder)
+            rel_paths = [f"{actual_folder}/{name}" if actual_folder else name for name in filenames]
+            display_names = filenames  # la cartella è già nota dal menu, non serve ripeterla
+
+        query = self.search_var.get().strip().lower()
+        if query:
+            paired = [
+                (display, rel) for display, rel in zip(display_names, rel_paths)
+                if query in rel.lower()
+            ]
+            display_names = [display for display, _ in paired]
+            rel_paths = [rel for _, rel in paired]
+
+        for display_name, rel_path in zip(display_names, rel_paths):
+            self.file_listbox.insert("end", display_name)
+            self._link_display_items.append(rel_path)
 
     def _get_link_for_selection(self):
         selection = self.file_listbox.curselection()
         if not selection:
             messagebox.showinfo("Nessuna selezione", "Seleziona prima un'immagine dall'elenco.")
             return
-        filename = self.file_listbox.get(selection[0])
-        folder = self.link_folder_var.get()
-        folder = "" if folder == ROOT_FOLDER_LABEL else folder
-        rel_path = f"{folder}/{filename}" if folder else filename
+        rel_path = self._link_display_items[selection[0]]
         repo_dir = self.config_data["repo_dir"]
         try:
             url = build_raw_url(repo_dir, rel_path)
@@ -619,9 +663,9 @@ class ImgPusherApp(BaseTk):
         self.add_folder_combo["values"] = add_values
         self.add_folder_var.set(ROOT_FOLDER_LABEL)
 
-        link_values = [ROOT_FOLDER_LABEL] + folders
+        link_values = [ALL_FOLDERS_LABEL, ROOT_FOLDER_LABEL] + folders
         self.link_folder_combo["values"] = link_values
-        self.link_folder_var.set(ROOT_FOLDER_LABEL)
+        self.link_folder_var.set(ALL_FOLDERS_LABEL)
         self._refresh_file_list()
 
     # ---- coda di aggiornamento UI (worker thread -> main thread) ----
