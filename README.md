@@ -1,158 +1,158 @@
 # imgpusher
 
-GUI per caricare immagini sulla tua repo GitHub personale e ottenere subito il
-link "raw" diretto, con drag & drop, scelta della cartella di destinazione
-(esistente o nuova) e copia automatica del link negli appunti.
+A GUI to upload images to your personal GitHub repo and instantly get the
+direct "raw" link, with drag & drop, a choice of destination folder
+(existing or new), and automatic clipboard copy of the link.
 
-## Requisiti
+## Requirements
 
-- macOS (funziona anche su Linux/Windows, ma le istruzioni qui sotto sono
-  pensate per macOS)
-- Python 3.8 o superiore
-- `git` installato e nel PATH
-- Una repository locale già clonata e con un remote GitHub funzionante
-  (via HTTPS o SSH, anche con alias host tipo `github.com-ilciccia`)
+- macOS (also works on Linux/Windows, but the instructions below are
+  written for macOS)
+- Python 3.8 or higher
+- `git` installed and available in your PATH
+- A local repository already cloned, with a working GitHub remote
+  (via HTTPS or SSH, including host aliases such as `github.com-ilciccia`)
 
-## Installazione
+## Installation
 
-### 1. Posizionati nella cartella del progetto
+### 1. Move into the project folder
 
 ```bash
-cd /percorso/dove/hai/salvato/imgpusher_gui.py
+cd /path/where/you/saved/imgpusher_gui.py
 ```
 
-### 2. Crea un ambiente virtuale (venv)
+### 2. Create a virtual environment (venv)
 
-Un venv tiene le dipendenze di questo script isolate dal resto del sistema,
-senza toccare l'installazione globale di Python.
+A venv keeps this script's dependencies isolated from the rest of your
+system, without touching your global Python installation.
 
 ```bash
 python3 -m venv venv
 ```
 
-Questo crea una cartella `venv/` nella directory corrente. Non va mai
-condivisa né versionata (se questa cartella finisse dentro una repo git,
-aggiungila a `.gitignore`).
+This creates a `venv/` folder in the current directory. Never share or
+version-control this folder (if it ends up inside a git repo, add it to
+`.gitignore`).
 
-### 3. Attiva il venv
+### 3. Activate the venv
 
 ```bash
 source venv/bin/activate
 ```
 
-Il prompt del terminale mostrerà `(venv)` davanti al percorso, a conferma che
-è attivo. Da questo momento, `python3` e `pip` puntano automaticamente alle
-versioni dentro il venv.
+Your terminal prompt will show `(venv)` before the path, confirming it's
+active. From this point on, `python3` and `pip` automatically point to the
+versions inside the venv.
 
-### 4. Installa le dipendenze
+### 4. Install the dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Questo installa `tkinterdnd2`, la libreria che abilita il drag & drop vero e
-proprio. **Non è strettamente obbligatoria**: senza di essa lo script parte
-comunque, ma la finestra offrirà solo il pulsante "Sfoglia file..." al posto
-del trascinamento diretto.
+This installs `tkinterdnd2`, the library that enables true drag & drop.
+**It's not strictly required**: the script still runs without it, but the
+window will only offer the "Browse files..." button instead of direct
+dragging.
 
-> **Nota su tkinter (macOS con Homebrew):** `tkinter` fa parte della libreria
-> standard di Python, quindi di norma non richiede installazione separata. Se
-> però usi una versione di Python installata via Homebrew e all'avvio ottieni
-> `ModuleNotFoundError: No module named 'tkinter'`, installalo con:
+> **Note on tkinter (macOS with Homebrew):** `tkinter` is part of Python's
+> standard library, so it normally doesn't need separate installation. If
+> you're using a Python version installed via Homebrew and you get
+> `ModuleNotFoundError: No module named 'tkinter'` at startup, install it
+> with:
 > ```bash
 > brew install python-tk
 > ```
-> (Con Python installato dal sito ufficiale python.org, tkinter è già incluso
-> e questo passaggio non serve.)
+> (With Python installed from the official python.org site, tkinter is
+> already included and this step isn't needed.)
 
-## Avvio
+## Starting the app
 
-Con il venv attivo (vedi passo 3):
+With the venv active (see step 3):
 
 ```bash
 python3 imgpusher_gui.py
 ```
 
-Alla primissima esecuzione, il programma chiede di selezionare la cartella
-locale della repo (quella contenente la sottocartella `.git`). La scelta
-viene salvata in `~/.imgpusher_config.json` e non va ripetuta nelle
-esecuzioni successive, a meno di usare il pulsante "Cambia repo..." nella
-finestra.
+On first launch, the program asks you to select the local repo folder (the
+one containing the `.git` subfolder). This choice is saved to
+`~/.imgpusher_config.json` and won't need to be repeated on later runs,
+unless you use the "Change repo..." button in the window.
 
-## Uso quotidiano
+## Everyday use
 
-Le volte successive, per avviare l'app basta:
+On subsequent runs, starting the app just takes:
 
 ```bash
-cd /percorso/dove/hai/salvato/imgpusher_gui.py
+cd /path/where/you/saved/imgpusher_gui.py
 source venv/bin/activate
 python3 imgpusher_gui.py
 ```
 
-Per uscire dal venv al termine (facoltativo, si disattiva comunque chiudendo
-il terminale):
+To leave the venv when you're done (optional — it also deactivates
+automatically when you close the terminal):
 
 ```bash
 deactivate
 ```
 
-### Suggerimento
+### Tip
 
-Se vuoi evitare di attivare il venv manualmente ogni volta, puoi lanciare lo
-script chiamando direttamente l'interprete dentro `venv/` senza attivarlo:
+If you'd rather skip activating the venv manually every time, you can call
+the interpreter inside `venv/` directly, without activating it:
 
 ```bash
 venv/bin/python3 imgpusher_gui.py
 ```
 
-Utile anche per creare un alias nella shell (`~/.zshrc`):
+This is also handy for creating a shell alias (`~/.zshrc`):
 
 ```bash
-alias imgpusher="cd /percorso/dove/hai/salvato/imgpusher_gui.py && venv/bin/python3 imgpusher_gui.py"
+alias imgpusher="cd /path/where/you/saved/imgpusher_gui.py && venv/bin/python3 imgpusher_gui.py"
 ```
 
-Dopo aver aggiunto l'alias e ricaricato la shell (`source ~/.zshrc`), basterà
-digitare `imgpusher` da qualsiasi cartella.
+After adding the alias and reloading your shell (`source ~/.zshrc`), just
+type `imgpusher` from anywhere.
 
-## Come funziona (in breve)
+## How it works (in short)
 
-1. Trascini uno o più file immagine nella finestra (o li selezioni con
-   "Sfoglia file...").
-2. Ogni file viene copiato nella repo locale, rinominato con un prefisso
-   data/ora (per evitare collisioni di nome e problemi di cache).
-3. Lo script esegue `git add`, `git commit` e `git push` automaticamente.
-4. Costruisce il link `raw.githubusercontent.com` corrispondente e lo copia
-   negli appunti.
+1. You drag one or more image files into the window (or pick them with
+   "Browse files...").
+2. Each file is copied into the local repo, renamed with a date/time
+   prefix (to avoid name collisions and caching issues).
+3. The script runs `git add`, `git commit`, and `git push` automatically.
+4. It builds the corresponding `raw.githubusercontent.com` link and copies
+   it to the clipboard.
 
-## Risoluzione problemi
+## Troubleshooting
 
 **`SyntaxError: unexpected character after line continuation character`,
-con `{\rtf1\ansi...}` in cima al file**
-Il file `.py` è stato salvato in formato RTF invece che testo semplice
-(succede aprendolo con TextEdit su macOS). Riscarica il file originale, oppure
-in TextEdit vai su **Format → Make Plain Text** prima di salvare. Per
-modificare lo script in futuro, usa `nano`, o un editor di codice (VS Code,
-Sublime Text, ecc.) invece di TextEdit.
+with `{\rtf1\ansi...}` at the top of the file**
+The `.py` file was saved in RTF format instead of plain text (happens when
+opening it with TextEdit on macOS). Re-download the original file, or in
+TextEdit go to **Format → Make Plain Text** before saving. To edit the
+script in the future, use `nano`, or a proper code editor (VS Code, Sublime
+Text, etc.) instead of TextEdit.
 
 **`ModuleNotFoundError: No module named 'tkinter'`**
-Vedi la nota sopra su Homebrew (`brew install python-tk`).
+See the Homebrew note above (`brew install python-tk`).
 
-**Il drag & drop non compare, solo il pulsante "Sfoglia file..."**
-`tkinterdnd2` non è installato (o non è installato *dentro* il venv attivo).
-Controlla di aver attivato il venv prima di installare/lanciare
-(`source venv/bin/activate`), poi `pip install -r requirements.txt`.
+**Drag & drop doesn't show up, only the "Browse files..." button**
+`tkinterdnd2` isn't installed (or isn't installed *inside* the active
+venv). Make sure the venv is activated before installing/launching
+(`source venv/bin/activate`), then `pip install -r requirements.txt`.
 
-**Errore durante `git push` all'interno dell'app**
-La causa più comune è che il remote della repo non sia raggiungibile con le
-credenziali attualmente configurate (vedi la configurazione SSH per account
-multipli, se applicabile). Prova a lanciare `git push` a mano dal terminale,
-nella stessa cartella della repo, per vedere il messaggio di errore completo.
+**Error during `git push` inside the app**
+The most common cause is that the repo's remote isn't reachable with the
+credentials currently configured (see the multi-account SSH setup, if
+applicable). Try running `git push` manually from the terminal, in the same
+repo folder, to see the full error message.
 
-## Struttura dei file
+## File structure
 
 ```
-imgpusher_gui.py        script principale (unico file necessario)
-requirements.txt        dipendenze opzionali (drag & drop)
-venv/                   ambiente virtuale locale (non versionare)
-~/.imgpusher_config.json   configurazione salvata (percorso della repo)
+imgpusher_gui.py        main script (the only file you actually need)
+requirements.txt        optional dependency (drag & drop)
+venv/                    local virtual environment (don't version-control)
+~/.imgpusher_config.json  saved configuration (repo path)
 ```
